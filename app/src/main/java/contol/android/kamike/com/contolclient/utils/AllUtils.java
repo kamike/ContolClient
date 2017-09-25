@@ -36,7 +36,7 @@ public class AllUtils {
             AppInfoBean myApp = new AppInfoBean();
             myApp.isSystem = app.isSystem();
             myApp.name = app.getName();
-            //myApp.packageName=app.getPackageName();
+            myApp.packageName=app.getPackageName();
             myApp.versionName = app.getVersionName();
             list.add(myApp);
         }

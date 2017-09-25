@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText etIp;
     public static final int SERVER_PORT = 6666;
     private TextView tvContent;
-    public static final String CHAR_SET="utf-8";
+    public static final String CHAR_SET = "utf-8";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onclickConnect(View view) {
-      final  String SERVER_ADDRESS = etIp.getText().toString();
+        final String SERVER_ADDRESS = etIp.getText().toString();
         if (TextUtils.isEmpty(SERVER_ADDRESS)) {
             Toast.makeText(this, "ip地址不能为空", Toast.LENGTH_SHORT).show();
             return;
@@ -54,9 +54,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
 
-                    OutputStream out=socket.getOutputStream();
+                    OutputStream out = socket.getOutputStream();
                     out.write("str".getBytes());
-                    String info=AllUtils.getClientInfo(MainActivity.this);
+                    String info = AllUtils.getClientInfo(MainActivity.this);
                     System.out.println(info);
                     out.write(info.getBytes(CHAR_SET));
                     out.flush();
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!(e instanceof EOFException)) {
                         e.printStackTrace();
                     }
-                    System.out.println("IOException======="+e.getMessage());
+                    System.out.println("IOException=======" + e.getMessage());
                 } finally {
                     closedSocket(socket);
                     recyBitmap(bmp);
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onclickConnectImg(View view) {
-      final   String SERVER_ADDRESS = etIp.getText().toString();
+        final String SERVER_ADDRESS = etIp.getText().toString();
         if (TextUtils.isEmpty(SERVER_ADDRESS)) {
             Toast.makeText(this, "ip地址不能为空", Toast.LENGTH_SHORT).show();
             return;
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!(e instanceof EOFException)) {
                         e.printStackTrace();
                     }
-                    System.out.println("IOException======="+e.getMessage());
+                    System.out.println("IOException=======" + e.getMessage());
                 } finally {
                     closedSocket(socket);
                     recyBitmap(bmp);
@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
             bitmap.recycle();
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -153,4 +154,6 @@ public class MainActivity extends AppCompatActivity {
     private void permissionSuccess(int requestCode) {
         Toast.makeText(this, "授权成功", Toast.LENGTH_SHORT).show();
     }
+
+
 }

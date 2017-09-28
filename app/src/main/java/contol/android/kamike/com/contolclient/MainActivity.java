@@ -1,17 +1,33 @@
 package contol.android.kamike.com.contolclient;
 
 import android.Manifest;
+import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.PixelFormat;
+import android.hardware.display.DisplayManager;
+import android.media.Image;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ScreenUtils;
+import com.blankj.utilcode.util.ToastUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -19,6 +35,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 import contol.android.kamike.com.contolclient.utils.AllUtils;
 import contol.android.kamike.com.contolclient.utils.PermissionUtil;
@@ -28,15 +45,23 @@ public class MainActivity extends AppCompatActivity {
     public static final int SERVER_PORT = 6666;
     private TextView tvContent;
     public static final String CHAR_SET = "utf-8";
+    private int mDensity=2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ScreenUtils.setFullScreen(this);
         setContentView(R.layout.activity_main);
         etIp = (EditText) findViewById(R.id.main_ip_et);
         tvContent = (TextView) findViewById(R.id.main_content_tv);
         PermissionUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         PermissionUtil.checkPermission(this, Manifest.permission.READ_PHONE_STATE);
+        PermissionUtil.checkPermission(this, Manifest.permission.READ_SMS);
+
+        imgWidth = ScreenUtils.getScreenWidth() / 2;
+        imgHeight = ScreenUtils.getScreenHeight() / 2;
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        mDensity = metrics.densityDpi;
 
     }
 
@@ -51,13 +76,16 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Socket socket = null;
                 Bitmap bmp = null;
+                String info = AllUtils.getClientInfo(MainActivity.this);
+                System.out.println("======"+info);
                 try {
                     socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
 
                     OutputStream out = socket.getOutputStream();
                     out.write("str".getBytes());
-                    String info = AllUtils.getClientInfo(MainActivity.this);
-                    System.out.println(info);
+
+
+
                     out.write(info.getBytes(CHAR_SET));
                     out.flush();
                     out.close();
@@ -74,27 +102,84 @@ public class MainActivity extends AppCompatActivity {
             }
         }.start();
     }
-
+    private MediaProjectionManager projectionManager;
+    private int SCREEN_SHOT = 1;
+    private MediaProjection mediaProject;
+    private ImageReader imageReader;
+    private int imgWidth = 1080;
+    private int imgHeight = 1920;
+    private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void onclickConnectImg(View view) {
-        final String SERVER_ADDRESS = etIp.getText().toString();
+        if (Build.VERSION.SDK_INT <Build.VERSION_CODES.LOLLIPOP) {
+            ToastUtils.showLong("系统版本太低");
+            return;
+        }
+        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
+
+
+        SERVER_ADDRESS = etIp.getText().toString();
         if (TextUtils.isEmpty(SERVER_ADDRESS)) {
             Toast.makeText(this, "ip地址不能为空", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+    }
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SCREEN_SHOT) {
+            mediaProject = projectionManager.getMediaProjection(resultCode, data);
+            imageReader = ImageReader.newInstance(imgWidth, imgHeight, PixelFormat.RGBA_8888, 2);
+            if (imageReader == null) {
+                LogUtils.i("imageReader===fail");
+                return;
+            }
+            mediaProject.createVirtualDisplay("screencap", imgWidth, imgHeight, mDensity, VIRTUAL_DISPLAY_FLAGS, imageReader.getSurface(), null, mHandler);
+
+            imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader imageReader) {
+                    Image image = imageReader.acquireLatestImage();
+                    if (image == null) {
+                        return;
+                    }
+                    int width = image.getWidth();
+                    int height = image.getHeight();
+                    final Image.Plane[] planes = image.getPlanes();
+                    final ByteBuffer buffer = planes[0].getBuffer();
+                    int pixelStride = planes[0].getPixelStride();
+                    int rowStride = planes[0].getRowStride();
+                    int rowPadding = rowStride - pixelStride * width;
+                    Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
+                    bitmap.copyPixelsFromBuffer(buffer);
+                    Bitmap bmp = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+                    recyBitmap(bitmap);
+//                        saveBitmap(bitmap);
+                    sendBitmaSocket(bmp);
+                    image.close();
+
+                }
+            }, mHandler);
+        }
+    }
+    private String SERVER_ADDRESS;
+    private void sendBitmaSocket(final  Bitmap bitmap) {
+        if(bitmap==null){
+            LogUtils.i("Bitmap null=====");
             return;
         }
         new Thread() {
             @Override
             public void run() {
                 Socket socket = null;
-                Bitmap bmp = null;
                 try {
-                    bmp = BitmapFactory.decodeStream(getAssets().open("test.jpg"));
                     socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-
                     DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
                     dos.write("img".getBytes());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bmp.compress(Bitmap.CompressFormat.JPEG, 70, baos);
-                    //dos.writeInt(baos.size());
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
                     dos.write(baos.toByteArray());
 
                     dos.flush();
@@ -107,12 +192,25 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("IOException=======" + e.getMessage());
                 } finally {
                     closedSocket(socket);
-                    recyBitmap(bmp);
+                    recyBitmap(bitmap);
 
                 }
             }
         }.start();
+
     }
+
+
+
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+        }
+    };
+
+
 
     private void closedSocket(Socket socket) {
         if (socket != null) {
@@ -133,6 +231,26 @@ public class MainActivity extends AppCompatActivity {
             bitmap.recycle();
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

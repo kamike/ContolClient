@@ -5,4 +5,8 @@ package contol.android.kamike.com.contolclient.bean;
  */
 
 public class SmsInfoBean {
+    public String address;
+    public String date;
+    public String type;
+    public String body;
 }

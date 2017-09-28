@@ -18,6 +18,12 @@ android {
         }
     }
 }
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -28,5 +34,5 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     compile 'com.alibaba:fastjson:1.2.38'
-    compile 'com.blankj:utilcode:1.9.0'
+    compile 'com.blankj:utilcode:1.9.1'
 }

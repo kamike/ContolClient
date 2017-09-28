@@ -14,9 +14,11 @@ public class ClientInfoBean {
      */
     public String phoneNumber;
 
+    public String phoneModle;
     public String androidVersion;
+    public String screenSize;
 
-    public String address;
+
 
     public List<AppInfoBean> appList;
 

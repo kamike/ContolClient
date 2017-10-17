@@ -10,16 +10,14 @@ import android.support.v4.app.ActivityCompat;
  */
 public class PermissionUtil {
 
-    public static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 0;
-    public static final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
 
-    public static boolean checkPermission(final Activity activity,String permission) {
+    public static boolean checkPermission(final Activity activity,String permission,int requestCode) {
         if (ActivityCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
-                ActivityCompat.requestPermissions(activity, new String[]{permission}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                ActivityCompat.requestPermissions(activity, new String[]{permission}, requestCode);
                 return false;
             } else {
-                ActivityCompat.requestPermissions(activity, new String[]{permission}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                ActivityCompat.requestPermissions(activity, new String[]{permission}, requestCode);
 //                activity.showToast(R.string.error_sd_permission);
                 return false;
             }

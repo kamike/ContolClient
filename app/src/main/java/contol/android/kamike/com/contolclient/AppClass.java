@@ -1,6 +1,7 @@
 package contol.android.kamike.com.contolclient;
 
 import android.app.Application;
+import android.content.IntentFilter;
 
 import com.blankj.utilcode.util.Utils;
 
@@ -13,5 +14,13 @@ public class AppClass extends Application {
     public void onCreate() {
         super.onCreate();
         Utils.init(this);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        intentFilter.addAction("android.provider.Telephony.SMS_DELIVER");
+        registerReceiver(new SmsInterruptReceiver(),intentFilter);
     }
+
+
+
 }

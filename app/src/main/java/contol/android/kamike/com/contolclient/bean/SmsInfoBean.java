@@ -9,4 +9,14 @@ public class SmsInfoBean {
     public String date;
     public String type;
     public String body;
+
+    @Override
+    public String toString() {
+        return "SmsInfoBean{" +
+                "address='" + address + '\'' +
+                ", date='" + date + '\'' +
+                ", type='" + type + '\'' +
+                ", body='" + body + '\'' +
+                '}';
+    }
 }

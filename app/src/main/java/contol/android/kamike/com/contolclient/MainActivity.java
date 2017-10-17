@@ -36,9 +36,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
+import contol.android.kamike.com.contolclient.bean.SmsInfoBean;
 import contol.android.kamike.com.contolclient.utils.AllUtils;
 import contol.android.kamike.com.contolclient.utils.PermissionUtil;
+import contol.android.kamike.com.contolclient.utils.SmsUtils;
 
 public class MainActivity extends AppCompatActivity {
     private EditText etIp;
@@ -54,14 +57,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         etIp = (EditText) findViewById(R.id.main_ip_et);
         tvContent = (TextView) findViewById(R.id.main_content_tv);
-        PermissionUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        PermissionUtil.checkPermission(this, Manifest.permission.READ_PHONE_STATE);
-        PermissionUtil.checkPermission(this, Manifest.permission.READ_SMS);
+        PermissionUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE,0);
+
 
         imgWidth = ScreenUtils.getScreenWidth() / 2;
         imgHeight = ScreenUtils.getScreenHeight() / 2;
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         mDensity = metrics.densityDpi;
+        readAllSmsTest();
 
     }
 
@@ -83,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
                     OutputStream out = socket.getOutputStream();
                     out.write("str".getBytes());
-
 
 
                     out.write(info.getBytes(CHAR_SET));
@@ -264,13 +266,35 @@ public class MainActivity extends AppCompatActivity {
             permissionSuccess(requestCode);
         } else {
             Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
-
         }
 
     }
 
     private void permissionSuccess(int requestCode) {
-        Toast.makeText(this, "授权成功", Toast.LENGTH_SHORT).show();
+        switch (requestCode) {
+            case 0:
+                PermissionUtil.checkPermission(this, Manifest.permission.READ_PHONE_STATE,1);
+                break;
+            case 1:
+                PermissionUtil.checkPermission(this, Manifest.permission.READ_SMS,2);
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            default:
+
+        }
+
+
+    }
+
+    private void readAllSmsTest(){
+        ArrayList<SmsInfoBean> list = SmsUtils.getAllSMS();
+        LogUtils.i("读取到了多少条短信："+list.size());
+        for(SmsInfoBean sms:list){
+            LogUtils.i(""+sms.toString());
+        }
     }
 
 

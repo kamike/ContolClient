@@ -21,7 +21,7 @@ public class SmsUtils {
         ContentResolver resolver = Utils.getApp().getContentResolver();
         // 1.2获取内容提供者地址   sms,sms表的地址:null  不写
         // 1.3获取查询路径
-        Uri uri = Uri.parse("content://sms");
+        Uri uri = Uri.parse("content://sms/");
         // 1.4.查询操作
         // projection : 查询的字段
         // selection : 查询的条件

@@ -7,11 +7,14 @@ import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
 
+import com.blankj.utilcode.util.LogUtils;
+
 public class SmsInterruptReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
 //        super.abortBroadcast();
+        LogUtils.i("SmsInterruptReceiver=====");
         if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
             Bundle bundle = intent.getExtras();
 

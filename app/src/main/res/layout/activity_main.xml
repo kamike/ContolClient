@@ -22,12 +22,7 @@
         android:layout_marginTop="15dp"
         android:padding="15dp" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:onClick="onclickConnect"
-        android:text="发送文字" />
+
 
     <Button
         android:layout_width="wrap_content"
@@ -36,7 +31,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp"
         android:onClick="onclickConnectImg"
-        android:text="发送图片" />
+        android:text="start" />
 
 
 </RelativeLayout>

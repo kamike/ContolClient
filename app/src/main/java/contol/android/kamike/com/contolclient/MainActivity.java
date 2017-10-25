@@ -92,9 +92,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     OutputStream socketOutput = socket.getOutputStream();
                     socketOutput.write(AllUtils.getUUIDCache().getBytes(CHAR_SET));
-
-
                     LogUtils.i("======" + info);
+                    socketOutput.flush();
                     socketOutput.write("str".getBytes());
                     socketOutput.write(info.getBytes(CHAR_SET));
                     socketOutput.flush();
@@ -111,15 +110,15 @@ public class MainActivity extends AppCompatActivity {
                             ToastUtils.showLong("控制端链接失败");
                         }
                     });
-                    try {
-                        sleep(2000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    if (failTimes < 5) {
-//                        sendClientInfo();
-                    }
-                    failTimes++;
+//                    try {
+//                        sleep(2000);
+//                    } catch (InterruptedException e1) {
+//                        e1.printStackTrace();
+//                    }
+//                    if (failTimes < 5) {
+////                        sendClientInfo();
+//                    }
+//                    failTimes++;
 
                 } finally {
                     closedSocket(socket);
@@ -159,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (!isScreening) {
             projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-            startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
+//            startActivityForResult(projectionManager.createScreenCaptureIntent(), SCREEN_SHOT);
             isScreening = true;
         }
 

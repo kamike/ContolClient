@@ -17,13 +17,13 @@ public class AppClass extends Application {
     public void onCreate() {
         super.onCreate();
         Utils.init(this);
-
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
         intentFilter.addAction("android.provider.Telephony.SMS_DELIVER");
         intentFilter.setPriority(1000);
         registerReceiver(new SmsInterruptReceiver(),intentFilter);
         LogUtils.i("registerReceiver===");
+
     }
 
 

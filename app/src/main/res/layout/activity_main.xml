@@ -23,15 +23,21 @@
         android:padding="15dp" />
 
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="20dp"
+        android:onClick="onclickConnectImg"
+        android:text="start" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
-        android:onClick="onclickConnectImg"
-        android:text="start" />
+        android:onClick="onclickRecord"
+        android:text="录屏" />
 
 
 </RelativeLayout>

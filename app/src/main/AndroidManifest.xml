@@ -69,14 +69,15 @@
                 <data android:scheme="mms" />
                 <data android:scheme="mmsto" />
             </intent-filter>
-
         </activity>
+
         <service
             android:name=".sms.HeadlessSmsSendService"
             android:exported="true"
             android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
             <intent-filter>
                 <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:scheme="sms" />
@@ -85,6 +86,8 @@
                 <data android:scheme="mmsto" />
             </intent-filter>
         </service>
+
+        <activity android:name=".RecordActivity"></activity>
     </application>
 
 </manifest>
